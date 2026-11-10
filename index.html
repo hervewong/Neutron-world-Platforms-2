@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6feb">
+<title>Vidéo Monde</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#1c2128;--bd:#c8ccd4;--ac:#1f6feb;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1e2227;--card:#2d333b;--tx:#e6e6e6;--bd:#444c56;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1e2227;--card:#2d333b;--tx:#e6e6e6;--bd:#444c56;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px system-ui,sans-serif}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:10}
+header{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:8px;z-index:9;border-bottom:1px solid var(--bd)}
+h1{margin:2px 4px 6px;font-size:18px}
+.row{display:flex;gap:6px;margin:6px 0}
+input,select,button,textarea{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:9px}
+input,select,textarea{flex:1;min-width:0;width:100%;margin:3px 0}
+button{cursor:pointer}
+#gs{background:var(--ac);border-color:var(--ac);color:#fff}
+nav{display:flex;gap:4px;overflow-x:auto}
+nav button{flex:none;padding:9px 14px}
+nav button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+main{padding:8px}
+details,.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;margin:8px 0;padding:4px 10px}
+summary{font-weight:600;padding:10px 0}
+.r{display:flex;align-items:center;border-top:1px solid var(--bd)}
+.r a{flex:1;padding:11px 6px;color:var(--tx);text-decoration:none}
+.r small{display:block;opacity:.65;font-size:12px}
+.s{border:0;background:none;font-size:22px;padding:6px 10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0}
+.chips a{border:1px solid var(--bd);border-radius:16px;padding:5px 11px;color:var(--tx);text-decoration:none;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:6px 0}
+.v{display:block;color:var(--tx);text-decoration:none;background:var(--bg);border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+.v img{width:100%;aspect-ratio:16/9;object-fit:cover;background:var(--bd);display:block}
+.v b{display:block;padding:6px 8px 0;font-size:13px;line-height:1.25;max-height:3.8em;overflow:hidden}
+.v small{display:block;padding:2px 8px 8px;opacity:.65;font-size:12px}
+.sec{font-weight:600;margin:10px 2px 2px}
+.hint{opacity:.75;padding:8px 2px;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎬 Vidéo Monde</h1>
+  <div class="row"><input id="q" placeholder="Rechercher une vidéo sur toutes les plateformes…" autocapitalize="off" autocorrect="off" spellcheck="false"><button id="gs" title="Rechercher">🔍</button><button id="th" title="Clair / sombre">◐</button></div>
+  <div id="hist" class="chips"></div>
+  <nav><button data-t="all">Recherche</button><button data-t="chine">Chine</button><button data-t="asie">Asie</button><button data-t="monde">Monde</button><button data-t="favs">Favoris</button></nav>
+</header>
+<main><div id="res"></div><div id="out"></div><div class="hint" id="st"></div><div class="hint">Écoutez et regardez uniquement des contenus publics, dans le respect des lois de votre pays. Plusieurs plateformes asiatiques demandent une connexion ou sont limitées hors de leur pays.</div></main>
+<script>
+const P=`# Chine
+Bilibili|https://search.bilibili.com/all?keyword={q}
+Douyin|https://www.douyin.com/search/{q}
+Kuaishou|https://www.kuaishou.com/search/video?searchKey={q}
+Youku|https://so.youku.com/search_video/q_{q}
+Tencent Video|https://v.qq.com/x/search/?q={q}
+iQIYI|https://so.iqiyi.com/so/q_{q}
+Mango TV|https://so.mgtv.com/so?k={q}
+Xigua|https://www.ixigua.com/search/{q}
+Haokan (Baidu)|https://haokan.baidu.com/web/search/page?query={q}
+Baidu Vidéos|https://www.baidu.com/sf/vsearch?pd=video&wd={q}
+AcFun|https://www.acfun.cn/search?keyword={q}
+Weibo Vidéos|https://s.weibo.com/video?q={q}
+Xiaohongshu|https://www.xiaohongshu.com/search_result?keyword={q}
+Sogou Vidéos|https://v.sogou.com/v?query={q}
+Bilibili (direct)|https://search.bilibili.com/live?keyword={q}
+Huya (direct)|https://www.huya.com/search?hsk={q}
+Douyu (direct)|https://www.douyu.com/search/?kw={q}
+# Corée
+Naver Vidéos|https://search.naver.com/search.naver?where=video&query={q}
+Kakao TV|https://tv.kakao.com/search?q={q}
+Tving|https://www.tving.com/search?keyword={q}
+Wavve|https://www.wavve.com/search?searchWord={q}
+SOOP (ex-AfreecaTV, direct)|https://www.sooplive.co.kr/
+# Japon
+Niconico|https://www.nicovideo.jp/search/{q}
+TVer|https://tver.jp/search?keyword={q}
+Yahoo Japon Vidéos|https://search.yahoo.co.jp/video/search?p={q}
+ABEMA|https://abema.tv/search?q={q}
+# Inde
+MX Player|https://www.mxplayer.in/search?q={q}
+ZEE5|https://www.zee5.com/search?q={q}
+JioHotstar|https://www.hotstar.com/in/search?q={q}
+# Asie du Sud-Est et Taïwan
+Vidio (Indonésie)|https://www.vidio.com/search?q={q}
+VieON (Viêt Nam)|https://vieon.vn/search?q={q}
+iQIYI International|https://www.iq.com/search?query={q}
+WeTV|https://wetv.vip/
+# Moyen-Orient
+Aparat (Iran)|https://www.aparat.com/search/{q}
+# Russie et Caucase
+VK Vidéo|https://vk.com/video?q={q}
+Rutube|https://rutube.ru/search/?query={q}
+Yandex Vidéos|https://yandex.com/video/search?text={q}
+# Monde
+YouTube|https://www.youtube.com/results?search_query={q}
+TikTok|https://www.tiktok.com/search?q={q}
+Dailymotion|https://www.dailymotion.com/search/{q}
+Vimeo|https://vimeo.com/search?q={q}
+Twitch (direct)|https://www.twitch.tv/search?term={q}
+Kick (direct)|https://kick.com/search?searchable={q}
+Facebook Watch|https://www.facebook.com/watch/search/?q={q}
+Instagram|https://www.instagram.com/explore/search/keyword/?q={q}
+X (vidéos)|https://x.com/search?q={q}&f=video
+BBC iPlayer|https://www.bbc.co.uk/iplayer/search?q={q}
+Arte|https://www.arte.tv/fr/search/?q={q}
+# Alternatifs et décentralisés
+Odysee|https://odysee.com/$/search?q={q}
+Rumble|https://rumble.com/search/video?q={q}
+BitChute|https://www.bitchute.com/search/?query={q}&kind=video
+PeerTube (Sepia Search)|https://sepiasearch.org/search?search={q}
+Internet Archive|https://archive.org/search?query={q}&and%5B%5D=mediatype%3A%22movies%22
+# Moteurs vidéo
+Google Vidéos|https://www.google.com/search?tbm=vid&q={q}
+Bing Vidéos|https://www.bing.com/videos/search?q={q}
+DuckDuckGo Vidéos|https://duckduckgo.com/?q={q}&iax=videos&ia=videos
+Brave Vidéos|https://search.brave.com/videos?q={q}`;
+const TABS={all:null,chine:["Chine"],asie:["Corée","Japon","Inde","Asie du Sud-Est et Taïwan","Moyen-Orient"],monde:["Monde","Russie et Caucase","Alternatifs et décentralisés","Moteurs vidéo"]};
+const GROUPS=P.trim().split("\n").reduce((a,l)=>{l=l.trim();if(l[0]==="#")a.push({g:l.slice(1).trim(),t:[]});else if(l){const p=l.split("|");a[a.length-1].t.push({n:p[0],u:p[1]})}return a},[]);
+const PIPED=["https://pipedapi.kavin.rocks","https://pipedapi.adminforge.de","https://api.piped.private.coffee"];
+const fmtD=s=>{s=Math.round(+s);if(!s||s<0)return"";const h=Math.floor(s/3600),m=Math.floor(s%3600/60),r=s%60;return(h?h+":"+String(m).padStart(2,"0"):m)+":"+String(r).padStart(2,"0")};
+async function jget(u){const c=new AbortController();setTimeout(()=>c.abort(),9000);const r=await fetch(u,{signal:c.signal});if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}
+const emsg=x=>x&&x.name==="AbortError"?"délai dépassé":(x&&x.message)||String(x);
+const SRC=[
+{n:"YouTube",run:async v=>{let e=new Error("aucun serveur");for(const b of PIPED){try{const d=await jget(b+"/search?q="+encodeURIComponent(v)+"&filter=videos");return(d.items||[]).slice(0,12).map(x=>({t:x.title,u:"https://www.youtube.com"+x.url,i:x.thumbnail,a:x.uploaderName,d:x.duration}))}catch(x){e=x}}throw e}},
+{n:"Dailymotion",run:async v=>{const d=await jget("https://api.dailymotion.com/videos?fields=title,url,thumbnail_240_url,owner.screenname,duration&limit=12&search="+encodeURIComponent(v));return(d.list||[]).map(x=>({t:x.title,u:x.url,i:x.thumbnail_240_url,a:x["owner.screenname"],d:x.duration}))}},
+{n:"Internet Archive",run:async v=>{const d=await jget("https://archive.org/advancedsearch.php?q="+encodeURIComponent("("+v+") AND mediatype:movies")+"&fl[]=identifier&fl[]=title&rows=12&output=json");return((d.response||{}).docs||[]).map(x=>({t:x.title,u:"https://archive.org/details/"+x.identifier,i:"https://archive.org/services/img/"+x.identifier}))}},
+{n:"PeerTube",run:async v=>{const d=await jget("https://sepiasearch.org/api/v1/search/videos?count=12&search="+encodeURIComponent(v));return(d.data||[]).map(x=>({t:x.name,u:x.url,i:x.thumbnailUrl,a:x.channel&&x.channel.displayName,d:x.duration}))}}
+];
+const $=s=>document.querySelector(s),q=()=>$("#q").value.trim();
+const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x)e.textContent=x;return e};
+const msg=t=>{$("#st").textContent=t};
+const load=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v===null?d:v}catch(e){return d}};
+const put=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return localStorage.getItem(k)!==null}catch(e){return false}};
+const isU=u=>/^https?:\/\//i.test(u||"");
+const cleanF=a=>(Array.isArray(a)?a:[]).filter(x=>x&&typeof x.id==="string"&&isU(x.u)).map(x=>({id:String(x.id).slice(0,200),n:String(x.n||x.u).slice(0,120),u:String(x.u).slice(0,600)})).slice(0,2000);
+let F=cleanF(load("vfav",[])),H=load("vhist",[]),seq=0;
+const saveF=()=>msg(put("vfav",F)?"Favoris enregistrés ✓ sur cet appareil":"Enregistrement impossible dans ce navigateur (mode privé ?)");
+const has=id=>F.some(x=>x.id===id);
+const tog=it=>{F=has(it.id)?F.filter(x=>x.id!==it.id):[...F,it];saveF()};
+const home=u=>{try{return new URL(u.split("{q}").join("")).origin+"/"}catch(e){return u}};
+const href=(u,v)=>u.includes("{q}")?(v?u.split("{q}").join(encodeURIComponent(v)):home(u)):u;
+function row(n,sub,h,it){const r=el("div","r"),a=el("a");a.href=h;a.target="_blank";a.rel="noopener noreferrer";a.append(el("b",0,n));if(sub)a.append(el("small",0,sub));r.append(a);if(it){const s=el("button","s",has(it.id)?"★":"☆");s.title="Favori";s.onclick=()=>{tog(it);s.textContent=has(it.id)?"★":"☆";if(tab==="favs")render()};r.append(s)}return r}
+const det=(g,open)=>{const d=document.createElement("details");d.open=!!open;d.append(el("summary",0,g));return d};
+function vcard(x){const a=el("a","v");a.href=x.u;a.target="_blank";a.rel="noopener noreferrer";if(isU(x.i)){const i=el("img");i.src=x.i;i.loading="lazy";i.alt="";i.referrerPolicy="no-referrer";a.append(i)}a.append(el("b",0,x.t||"Sans titre"),el("small",0,[x.a,fmtD(x.d)].filter(Boolean).join(" · ")));return a}
+let tab=load("vtab","all");
+function favs(o){if(!F.length)o.append(el("div","hint","Aucun favori. Touchez ☆ à côté d’une plateforme pour la garder ici."));else{const c=el("div","card");F.forEach(x=>c.append(row(x.n,"",href(x.u,q()),x)));o.append(c)}
+const s=det("Sauvegarder ou transférer mes favoris"),ta=el("textarea");ta.rows=5;ta.placeholder="Collez ici des favoris exportés pour les importer";const cp=el("button",0,"Copier mes favoris"),im=el("button",0,"Importer le texte collé");
+cp.onclick=async()=>{const t=JSON.stringify(F);ta.value=t;try{await navigator.clipboard.writeText(t);msg("Favoris copiés ✓")}catch(e){ta.select();msg("Sélectionnez le texte ci-dessus et copiez-le.")}};
+im.onclick=()=>{try{cleanF(JSON.parse(ta.value)).forEach(x=>{if(!has(x.id))F.push(x)});saveF();render()}catch(e){msg("Texte invalide : collez un export de Vidéo Monde.")}};
+s.append(el("div","hint","Les favoris sont gardés sur cet appareil. Copiez-les pour les transférer ailleurs."),cp,ta,im);o.append(s)}
+function render(){put("vtab",tab);document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===tab));$("#res").hidden=tab!=="all";const o=$("#out");o.textContent="";if(tab==="favs")return favs(o);
+const v=q();GROUPS.filter(g=>!TABS[tab]||TABS[tab].includes(g.g)).forEach((g,i)=>{const d=det(g.g+" ("+g.t.length+")",tab==="all"?i<2:i===0);
+if(window.vid){const b=el("button",0,"▦ Mosaïque : les 6 premières plateformes");b.onclick=()=>window.vid.grid(g.t.slice(0,6).map(t=>href(t.u,v)));d.append(b)}
+g.t.forEach(t=>{const h=href(t.u,v);d.append(row(t.n,"",h,{id:"p:"+g.g+"|"+t.n,n:t.n,u:t.u}))});o.append(d)})}
+function drawHist(){const h=$("#hist");h.textContent="";H.forEach(x=>{const a=el("a",0,x);a.href="#";a.onclick=e=>{e.preventDefault();$("#q").value=x;go()};h.append(a)})}
+function go(){const v=q();tab="all";msg("");render();const r=$("#res");r.textContent="";
+if(!v){r.append(el("div","hint","Tapez ce que vous cherchez, puis Entrée ou 🔍. Les résultats de YouTube, Dailymotion, Internet Archive et PeerTube s’affichent ici ; toutes les autres plateformes (chinoises, coréennes, japonaises, indiennes…) s’ouvrent d’un toucher, avec votre recherche déjà remplie."));return}
+H=[v,...H.filter(x=>x!==v)].slice(0,12);put("vhist",H);drawHist();const my=++seq;
+SRC.forEach(s=>{const c=el("div","card");c.append(el("div","sec",s.n));const body=el("div");body.append(el("div","hint","Chargement…"));c.append(body);r.append(c);
+s.run(v).then(items=>{if(my!==seq)return;body.textContent="";const ok=items.filter(x=>isU(x.u));if(!ok.length){body.append(el("div","hint","Aucun résultat."));return}const g=el("div","grid");ok.forEach(x=>g.append(vcard(x)));body.append(g)}).catch(e=>{if(my!==seq)return;body.textContent="";body.append(el("div","hint","Indisponible ("+emsg(e)+") : ouvrez "+s.n+" directement dans la liste plus bas."))})})}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{tab=b.dataset.t;msg("");render()});
+$("#q").addEventListener("input",()=>{if(tab!=="favs")render()});
+$("#q").addEventListener("keydown",e=>{if(e.key==="Enter")go()});
+$("#gs").onclick=go;
+$("#th").onclick=()=>{const r=document.documentElement,d=matchMedia("(prefers-color-scheme: dark)").matches,c=r.dataset.theme||(d?"dark":"light"),n=c==="dark"?"light":"dark";r.dataset.theme=n;put("vth",n)};
+const sv=load("vth",null);if(sv)document.documentElement.dataset.theme=sv;
+drawHist();render();if(tab==="all")go();
+</script>
+</body>
+</html>
